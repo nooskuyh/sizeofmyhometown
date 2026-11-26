@@ -3,14 +3,14 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Compare distances and sketch on two maps at a shared ground scale.">
+  <meta name="description" content="Sketch on two maps at a shared ground scale.">
   <meta name="theme-color" content="#f6f9fe">
   <title>Size of My Hometown</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <script type="module" crossorigin src="./assets/index-C9p6PBn2.js"></script>
-  <link rel="stylesheet" crossorigin href="./assets/index-CQk-N_Sk.css">
+  <script type="module" crossorigin src="./assets/index-SFsQut7o.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-D8OJVz-8.css">
 </head>
 <body>
   <main>
@@ -18,16 +18,9 @@
 
     <section aria-label="Map comparison" class="workspace">
       <div class="toolbar">
-        <div class="toolbar-group">
-          <div class="segmented">
-            <button type="button" data-mode="distance" title="Shortest distance along Earth’s surface" aria-pressed="true">Distance</button>
-          </div>
-        </div>
-        <div class="toolbar-group toolbar-right">
-          <div class="segmented units" role="group" aria-label="Measurement units">
-            <button type="button" data-unit="metric" aria-label="Kilometers" aria-pressed="true">km</button>
-            <button type="button" data-unit="imperial" aria-label="Miles" aria-pressed="false">mi</button>
-          </div>
+        <div class="segmented units" role="group" aria-label="Map scale units">
+          <button type="button" data-unit="metric" aria-label="Kilometers" aria-pressed="true">km</button>
+          <button type="button" data-unit="imperial" aria-label="Miles" aria-pressed="false">mi</button>
         </div>
       </div>
       <div class="map-switch segmented" role="group" aria-label="Visible map">
@@ -37,7 +30,7 @@
       <div class="map-grid" id="maps"></div>
       <div class="sketch-tools">
         <div class="segmented" role="group" aria-label="Pen tools">
-          <button type="button" data-mode="pan" aria-pressed="false">Pan</button>
+          <button type="button" data-mode="move" aria-pressed="true">Move</button>
           <button type="button" data-mode="pen" aria-pressed="false" disabled>Pen</button>
           <button type="button" id="pen-undo" aria-label="Undo pen stroke" disabled>Undo</button>
           <button type="button" id="pen-clear" aria-label="Clear pen strokes" disabled>Clear</button>
@@ -45,13 +38,6 @@
         <p id="walk-estimate" role="status" title="Straight-line estimate at 5 km/h" hidden></p>
       </div>
 
-      <section class="comparison" aria-label="Measurement comparison">
-        <div class="comparison-body" aria-live="polite" aria-atomic="true">
-          <div class="comparison-place place-a"><span class="place-dot" aria-hidden="true"></span><span id="name-0"></span><strong id="value-0">—</strong></div>
-          <div class="comparison-place place-b"><span class="place-dot" aria-hidden="true"></span><span id="name-1"></span><strong id="value-1">—</strong></div>
-          <p class="comparison-result" id="ratio" hidden></p>
-        </div>
-      </section>
     </section>
   </main>
 
@@ -75,23 +61,14 @@
             </form>
             <p class="search-status" role="status"></p>
             <ul class="search-results"></ul>
-            <p class="search-note" hidden>Choosing a different place clears this map’s measurements.</p>
           </div>
         </details>
       </div>
       <div class="map-viewport">
         <div class="map-canvas"></div>
         <canvas class="pen-overlay" aria-hidden="true"></canvas>
-        <div class="center-target" aria-hidden="true"></div>
         <span class="ground-scale" title="Linked ground scale at the map center" hidden></span>
         <p class="map-error" role="status" hidden></p>
-      </div>
-      <div class="pane-footer">
-        <p class="measurement-status" role="status"></p>
-        <div class="map-actions">
-          <button type="button" class="undo">Undo</button>
-          <button type="button" class="clear">Clear</button>
-        </div>
       </div>
     </article>
   </template>
