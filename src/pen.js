@@ -48,6 +48,7 @@ export function walkingMinutes(points) {
 export function setupPen(panes, getGroundScale, onChange) {
   const [left, right] = panes.map(({ map }) => map);
   const input = left.getCanvas();
+  const navigationHelp = input.getAttribute('aria-label');
   const overlays = panes.map(({ element }) => element.querySelector('.pen-overlay'));
   const strokes = [];
   let metersPerPixel = getGroundScale(left);
@@ -173,6 +174,7 @@ export function setupPen(panes, getGroundScale, onChange) {
       if (enabled === active) return;
       active = enabled;
       left.getCanvasContainer().classList.toggle('pen-input', enabled);
+      input.setAttribute('aria-label', enabled ? `Drag to draw. ${navigationHelp}` : navigationHelp);
       if (enabled) {
         left.dragPan.disable();
         left.boxZoom.disable();
