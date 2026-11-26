@@ -1,3 +1,5 @@
+import { setupSketchAdjustment, sketchBounds } from './sketch-adjust.js';
+
 const strokeColor = '#214794';
 const walkingMetersPerMinute = 5000 / 60;
 
@@ -52,9 +54,25 @@ export function setupPen(panes, getGroundScale, onChange) {
   const overlays = panes.map(({ element }) => element.querySelector('.pen-overlay'));
   const strokes = [];
   let metersPerPixel = getGroundScale(left);
-  let active = false;
+  let tool = 'move';
   let current;
   let frame = 0;
+
+  const adjustment = setupSketchAdjustment(
+    input,
+    overlays[0].parentElement,
+    () => metersPerPixel,
+    scheduleRender,
+    (transform) => {
+      for (const stroke of strokes) stroke.points = stroke.points.map(transform);
+      updateSelection();
+    },
+  );
+
+  function updateSelection() {
+    adjustment.setBounds(tool === 'adjust' && strokes.length ? sketchBounds(strokes) : undefined);
+    scheduleRender();
+  }
 
   function drawStroke(context, points) {
     const [firstX, firstY] = points[0].map((value) => value / metersPerPixel);
@@ -97,8 +115,12 @@ export function setupPen(panes, getGroundScale, onChange) {
       context.resetTransform();
       context.clearRect(0, 0, pixelWidth, pixelHeight);
       context.setTransform(density, 0, 0, density, pixelWidth / 2, pixelHeight / 2);
+      context.save();
+      adjustment.applyPreview(context, metersPerPixel);
       for (const { points } of strokes) drawStroke(context, points);
       if (current) drawStroke(context, current.points);
+      context.restore();
+      if (overlay === overlays[0]) adjustment.renderControls(width, height, metersPerPixel);
     }
   }
 
@@ -137,7 +159,7 @@ export function setupPen(panes, getGroundScale, onChange) {
   }
 
   input.addEventListener('pointerdown', (event) => {
-    if (!active) return;
+    if (tool !== 'pen') return;
     if (!event.isPrimary && event.pointerType === 'touch') {
       // Let the map handle two-finger zooming without committing the draft.
       if (current?.type === 'touch') finishStroke(false);
@@ -170,19 +192,27 @@ export function setupPen(panes, getGroundScale, onChange) {
   }
 
   return {
-    setActive(enabled) {
-      if (enabled === active) return;
-      active = enabled;
-      left.getCanvasContainer().classList.toggle('pen-input', enabled);
-      input.setAttribute('aria-label', enabled ? `Drag to draw. ${navigationHelp}` : navigationHelp);
-      if (enabled) {
+    setTool(next) {
+      if (next === tool) return;
+      tool = next;
+      finishStroke(true);
+      const container = left.getCanvasContainer();
+      container.classList.toggle('pen-input', tool === 'pen');
+      container.classList.toggle('adjust-input', tool === 'adjust');
+      const help = {
+        pen: `Drag to draw. ${navigationHelp}`,
+        adjust: 'Drag or use arrow keys to move the sketch. Use plus or minus to zoom.',
+        move: navigationHelp,
+      };
+      input.setAttribute('aria-label', help[tool]);
+      if (tool !== 'move') {
         left.dragPan.disable();
         left.boxZoom.disable();
       } else {
-        finishStroke(true);
         left.dragPan.enable();
         left.boxZoom.enable();
       }
+      updateSelection();
     },
     setGroundScale(scale) {
       if (metersPerPixel === scale) return;
@@ -193,13 +223,13 @@ export function setupPen(panes, getGroundScale, onChange) {
     latestEstimate: () => strokes.findLast(({ minutes }) => minutes !== null)?.minutes,
     undo() {
       strokes.pop();
-      scheduleRender();
+      updateSelection();
       onChange();
     },
     clear() {
       finishStroke(false);
       strokes.length = 0;
-      scheduleRender();
+      updateSelection();
       onChange();
     },
   };

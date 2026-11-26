@@ -13,11 +13,14 @@ let unit = 'metric';
 let visiblePane = 0;
 let syncingCameras = false;
 let pen;
+let activeTool = 'move';
 
 function updateSketchTools() {
   const hasStrokes = pen.hasStrokes();
   document.querySelector('#pen-undo').disabled = !hasStrokes;
   document.querySelector('#pen-clear').disabled = !hasStrokes;
+  document.querySelector('[data-mode="adjust"]').hidden = !hasStrokes;
+  if (!hasStrokes && activeTool === 'adjust') selectTool('move');
   const minutes = pen.latestEstimate();
   const result = document.querySelector('#walk-estimate');
   result.hidden = minutes === undefined;
@@ -205,15 +208,18 @@ if (panes.every(({ map }) => map)) {
 }
 
 const toolButtons = document.querySelectorAll('[data-mode]');
+
+function selectTool(tool) {
+  activeTool = tool;
+  pen?.setTool(tool);
+  if (tool !== 'move') showPane(0);
+  for (const toggle of toolButtons) {
+    toggle.setAttribute('aria-pressed', String(toggle.dataset.mode === tool));
+  }
+}
+
 for (const button of toolButtons) {
-  button.addEventListener('click', () => {
-    const drawing = button.dataset.mode === 'pen';
-    pen?.setActive(drawing);
-    if (drawing) showPane(0);
-    for (const toggle of toolButtons) {
-      toggle.setAttribute('aria-pressed', String(toggle === button));
-    }
-  });
+  button.addEventListener('click', () => selectTool(button.dataset.mode));
 }
 
 for (const button of document.querySelectorAll('[data-unit]')) {
